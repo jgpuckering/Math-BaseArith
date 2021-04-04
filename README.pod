@@ -30,5 +30,6 @@ number base.
 =head1 AUTHOR
 
 Gary Puckering E<lt>jgpuckering@rogers.comE<gt>
+(CPAN author PUCKERING)
 
 =cut
