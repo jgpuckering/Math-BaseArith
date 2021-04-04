@@ -31,7 +31,7 @@ our @EXPORT = qw(
 	encode
 	decode	
 );
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 #######################################################################
 
@@ -99,15 +99,17 @@ sub decode {
 	my $b = 1;
 	my $base = 1;
 	my $r;
+	my @b_list = @$b_listRef; # copy the base value list
+	my @r_list = @$r_listRef; # copy the representation value list
 
 	do {
-		$r = pop @$r_listRef;
+		$r = pop @r_list;
 		$value += $r * $base;
 		printf STDERR "%10d%10d%10d%10d\n", $r,$b,$base,$value 
 			if $Math::BaseArith::debug >= 2;
-		$b = pop @$b_listRef || $b;
+		$b = pop @b_list || $b;
 		$base *= $b;
-	} while @$r_listRef;
+	} while @r_list;
 	$value;
 }
 
