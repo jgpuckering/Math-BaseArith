@@ -8,7 +8,7 @@ use Carp;
 
 require Exporter;
 
-our $VERSION = '1.02';
+our $VERSION = '1.020';
 
 our $DEBUG = 0;     # set to 1 to enable debug printing
 
@@ -136,15 +136,23 @@ __END__
 
 =head1 NAME
 
-Math::BaseArith - Perl extension for mixed-base number representation (like APL encode/decode)
+Math::BaseArith - mixed-base number arithmetic (like APL encode/decode)
 
 =head1 SYNOPSIS
 
   use Math::BaseArith qw( :all );
 
-  encode_base( value, base_listref );
+  encode_base( $value, \@base );
 
-  decode_base( representation_listref, base_listref );
+  decode_base( \@representation, \@base );
+  
+  my @yd_ft_in = (0, 3, 12);
+
+  # convert 175 inches to 4 yards 2 feet 7 inches
+  encode_base( 175, \@yd_ft_in ) 
+
+  # convert 4 yards 2 feet 7 inches to 175 inches
+  decode_base( [4, 2, 7], \@yd_ft_in )
 
 =head1 DESCRIPTION
 
@@ -154,7 +162,7 @@ and decode (a.k.a. base). Their principal use is to convert numbers from
 one number base to another. Mixed number bases are permitted. 
 
 In this perl implementation, the representation of a number in a 
-particular number base consists of a list refence (listref) whose 
+particular number base consists of a list reference whose 
 elements are the digit values in that base. For example, the decimal 
 number 31 would be expressed in binary as a list of five ones with any 
 number of leading zeros: [0, 0, 0, 1, 1, 1, 1, 1]. The same number 
@@ -163,15 +171,16 @@ while in base 10 it would be [0, 3, 1]. Fifty-one inches would be
 expressed in yards, feet, inches as [1, 1, 3], an example of a mixed 
 number base. 
 
+=head1 FUNCTIONS
+
 In the following description of encode_base and decode_base, Q will mean 
 an abstract value or quantity, R will be its representation and B will 
 define the number base. Q will be a perl scalar; R and B are perl lists. 
 The values in R correspond to the radix values in B. 
 
-In the examples below, assume the output of B<print> has been altered by
-setting $, = ' ' and that C<=E<gt>> is your shell prompt.
-
-=head1 FUNCTIONS
+In the examples below, assume the function output is being printed by:
+    
+    sub echo { print '=> ', join ', ', @_ }
 
 =head2 encode_base
 
@@ -181,16 +190,16 @@ argument defines the base (or bases) to be used for the representation.
 Consider first the representation of a scalar in a single uniform number 
 base: 
 
-    print encode_base( 2, [2, 2, 2, 2] )
+    encode_base( 2, [2, 2, 2, 2] )
     => 0 0 1 0
 
-    print encode_base( 5, [2, 2, 2, 2] )
+    encode_base( 5, [2, 2, 2, 2] )
     => 0 1 0 1
 
-    print encode_base( 13, [2, 2, 2, 2] )
+    encode_base( 13, [2, 2, 2, 2] )
     => 1 1 0 1
 
-    print encode_base( 62, [16, 16, 16] )
+    encode_base( 62, [16, 16, 16] )
     => 0 3 14
 
 The second argument is called the base list. The length of the base list 
@@ -201,56 +210,56 @@ other uses of encode_base, and may clarify the use of encode_base with
 mixed number bases. 
 
     # The representation of 75 in base 4
-    print encode_base( 75, [4, 4, 4, 4] )
+    encode_base( 75, [4, 4, 4, 4] )
     => 1 0 2 3
 
     # At least four digits are needed for the full representation
-    print encode_base( 75, [4, 4, 4] )
+    encode_base( 75, [4, 4, 4] )
     => 0 2 3
 
     # If fewer elements are in the second argument,
     # leading digits do not appear in the representation.
-    print encode_base( 75, [4, 4] )
+    encode_base( 75, [4, 4] )
     => 2 3
 
-    # If the second argument is a one-element listref, encode_base is identical
-    # to modulus (%)
-    print encode_base( 75, [4] )
+    # If the second argument is a one-element list reference, encode_base 
+    # is identical to modulus (%)
+    encode_base( 75, [4] )
     => 3
-    print encode_base( 76, [4] )
+    encode_base( 76, [4] )
     => 0
 
     # The expression encode_base( Q, [0] ) always yields Q as the result
-    print encode_base ( 75, [0] )
+    encode_base ( 75, [0] )
     => 75
 
     # This usage returns quotient and remainder
-    print encode_base( 75, [0, 4] )
+    encode_base( 75, [0, 4] )
     => 18 3
 
     # The first quotient (18) is again divided by 4,
     # yielding a second quotient and remainder
-    print encode_base( 75, [0, 4, 4] )
+    encode_base( 75, [0, 4, 4] )
     => 4 2 3
 
     # The process is repeated again. Since the last quotient
     # is less than 4, the result is the same as encode_base(75,[4,4,4,4])
-    print encode_base( 75, [0, 4, 4, 4] )
+    encode_base( 75, [0, 4, 4, 4] )
     => 1 0 2 3
 
 Now consider a mixed number base: convert 175 inches into yards, feet,
 inches.
 
     # 175 inches is 14 feet, 7 inches (quotient and remainder).
-    print encode_base( 175, [0, 12] )
+    encode_base( 175, [0, 12] )
     => 14 7
 
     # 14 feet is 4 yards, 2 feet,
-    print encode_base( 14, [0, 3] )
+    encode_base( 14, [0, 3] )
     => 4 2
 
     # so 175 inches is 4 yards, 2 feet, 7 inches.
-    print encode_base( 175, [0, 3, 12] )
+    encode_base( 175, [0, 3, 12] )
     => 4 2 7
 
 =head2 decode_base
@@ -262,44 +271,43 @@ B<Q> in a number base defined by the radix list B<B> (i.e., C<@R =
 encode_base($Q,@B)>, then the expression C<decode_base(@R,@B)> yields 
 C<$Q>: 
 
-    print decode_base( [0, 0, 1, 0], [2, 2, 2, 2] )
+    decode_base( [0, 0, 1, 0], [2, 2, 2, 2] )
     => 2
 
-    print decode_base( [0, 1, 0, 1], [2, 2, 2, 2] )
+    decode_base( [0, 1, 0, 1], [2, 2, 2, 2] )
     => 5
 
-    print decode_base( [0, 3, 14], [16, 16, 16]
+    decode_base( [0, 3, 14], [16, 16, 16]
     => 62
 
 The length of the representation list must be less than or equal to
 that of the base list.
 
-    print decode_base( [1, 1, 1, 1], [2, 2, 2, 2] )
+    decode_base( [1, 1, 1, 1], [2, 2, 2, 2] )
     => 15
 
-    print decode_base( [1, 1, 1, 1], [2] )
+    decode_base( [1, 1, 1, 1], [2] )
     => 15
 
-    print decode_base( [1], [2, 2, 2, 2] )
+    decode_base( [1], [2, 2, 2, 2] )
     => 15
 
-    print decode_base( [1, 1, 1, 1], [2, 2, 2] )
+    decode_base( [1, 1, 1, 1], [2, 2, 2] )
     => (void)
     raises a LENGTH ERROR
 
 As with the encode_base function, mixed number bases can be used:
 
     # Convert 4 yards, 2 feet, 7 inches to inches.
-    print decode_base( [4, 2, 7], [0, 3, 12] )
+    decode_base( [4, 2, 7], [0, 3, 12] )
     => 175
 
-
     # Convert 2 days, 3 hours, 5 minutes, and 27 seconds to seconds
-    print decode_base( [2, 3, 5, 27], [0, 24, 60, 60] )
+    decode_base( [2, 3, 5, 27], [0, 24, 60, 60] )
     => 183927
 
     # or to minutes.
-    print decode_base( [2, 3, 5, 27], [0, 24, 60, 60] ) / 60
+    decode_base( [2, 3, 5, 27], [0, 24, 60, 60] ) / 60
     => 3065.45
 
 The first element of the radix list (second argument) is not used; it is
@@ -396,18 +404,51 @@ L<https://aplwiki.com/wiki/Decode>
 
 =head1 AUTHOR
 
-Gary Puckering E<lt>jgpuckering@rogers.comE<gt>
+PUCKERING, Gary Puckering E<lt>jgpuckering@rogers.comE<gt>
 
-=head1 COPYRIGHT
+=head1 BUGS
+
+Please report any bugs or feature requests to C<bug-math-basearith at rt.cpan.org>, or through
+the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Math-BaseArith>.  I will be notified, and then you'll automatically be notified of progress on your bug as I make changes.
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc Math::BaseArith
+
+You can also look for information at:
+
+=over 4
+
+=item * RT: CPAN's request tracker (report bugs here)
+
+L<https://rt.cpan.org/NoAuth/Bugs.html?Dist=Math-BaseArith>
+
+=item * CPAN Ratings
+
+L<https://cpanratings.perl.org/d/Math-BaseArith>
+
+=item * Search CPAN
+
+L<https://metacpan.org/release/Math-BaseArith>
+
+=back
+
+
+=head1 ACKNOWLEDGEMENTS
+
+Kenneth E. Iverson, inventor of APL and author of "A Programming Language", John Wiley & Sons, 1962
+
+=head1 COPYRIGHT AND LICENSE
 
 Copyright (c) 2002, Gary Puckering. All rights reserved. 
- 
-=head1 LICENSE
 
-This module is free software; you can redistribute it and/or modify it under the same terms as Perl itself.  See:
-
-L<http://www.gnu.org/copyleft/gpl.html>
-
-L<http://www.perl.com/language/misc/Artistic.html>
+This module is free software; you can redistribute it and/or modify it 
+under the same terms as Perl 5. For more details, see the full text 
+of the licenses in the directory LICENSES. This program is distributed 
+in the hope that it will be useful, but without any warranty; without 
+even the implied warranty of merchantability or fitness for a particular 
+purpose. 
 
 =cut
