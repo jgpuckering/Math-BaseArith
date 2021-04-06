@@ -1,6 +1,5 @@
 package Math::BaseArith;
 
-
 use 5.006;
 use strict;
 use warnings;
@@ -9,8 +8,9 @@ use Carp;
 
 require Exporter;
 
-our $DEBUG = 0;     # set to 1 to enable debug printing
+# VERSION
 
+our $DEBUG = 0;     # set to 1 to enable debug printing
 
 our @ISA = qw(Exporter);
 
