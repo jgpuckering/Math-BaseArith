@@ -1,5 +1,6 @@
 package Math::BaseArith;
 
+
 use 5.006;
 use strict;
 use warnings;
@@ -7,8 +8,6 @@ use integer;
 use Carp;
 
 require Exporter;
-
-our $VERSION = '1.020';
 
 our $DEBUG = 0;     # set to 1 to enable debug printing
 
